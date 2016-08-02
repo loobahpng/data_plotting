@@ -12,11 +12,12 @@ begin
     plottype="map"
   end if
   month_abbr = (/"1_Jan","2_Feb","3_Mar","4_Apr","5_May","6_Jun","7_Jul","8_Aug","9_Sep","10_Oct","11_Nov","12_Dec"/)
-    varname="CMG_0_05_Deg_Monthly_EVI"
+;   varname="CMG_0_05_Deg_Monthly_EVI"
+    varname="CMG_0_05_Deg_Monthly_NDVI"
 ;    varname="LST_Day_CMG"
     autolevsCli=0
 do	yy=2007,2007
-if (varname.eq."CMG_0_05_Deg_Monthly_EVI")then
+if (varname.eq."CMG_0_05_Deg_Monthly_NDVI".or.varname.eq."CMG_0_05_Deg_Monthly_EVI")then
 	fils=systemfunc ("ls /work4/L.r02229011/MODIS/MYD13C2.005/*A"+yy+"*.hdf |head -n 5|tail -n 4")
 	print(fils)
 	in=addfiles(fils,"r")
@@ -61,7 +62,7 @@ end if
 ; create default plot
 ;************************************************
   if (plottype .eq. "map") then
-    wks = gsn_open_wks("png","fig/"+varname+"_ctrl_"+plottype)  ; open a wks
+    wks = gsn_open_wks("png","/home/L.r02229011/fig/"+varname+"_ctrl_"+plottype)  ; open a wks
     res	= True               ; plot mods desired
     res@cnFillOn	= True               ; turn on color fill
     res@cnLinesOn	= False              ; turn off contour lines
@@ -128,6 +129,9 @@ res@trGridType="TriangularMesh"
     if (varname.eq."CMG_0_05_Deg_Monthly_EVI")then
       res@gsnLeftString="EVI"
     end if
+    if (varname.eq."CMG_0_05_Deg_Monthly_NDVI")then
+      res@gsnLeftString="NDVI"
+    end if
     if (varname.eq."LST_Day_CMG")then
       res@gsnLeftString="Land Surf Temp"
     end if
@@ -167,7 +171,7 @@ res@trGridType="TriangularMesh"
 ;	wksMonth= gsn_open_wks("png","fig/"+varname+"_"+month_abbr(month_plot))
 	;symMinMaxPlt(VarClima(month_plot,:,:)*plotscale,20,False,res)
 ;	plotMonth=gsn_csm_contour_map(wksMonth,VarClima(month_plot,:,:),res)
-	wksMonth=gsn_open_wks("png","fig/MODIS_FebtoMay_"+yy+"_"+varname+"_zoom")
+	wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/MODIS_FebtoMay_"+yy+"_"+varname+"_zoom")
 	plotMonth=gsn_csm_contour_map(wksMonth,Var,res)
     pmres = True
     pmres@gsMarkerColor = "Black"
