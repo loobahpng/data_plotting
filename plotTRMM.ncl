@@ -14,11 +14,14 @@ begin
   end if
   month_abbr = (/"1_Jan","2_Feb","3_Mar","4_Apr","5_May","6_Jun","7_Jul","8_Aug","9_Sep","10_Oct","11_Nov","12_Dec"/)
     varname="pcp"
-do yy=1998,2006
     autolevsCli=0
     minLevelCli=0
     maxLevelCli=2
-	fils=systemfunc ("ls /dadm1/obs/TRMM/3B43_V7/mon/3B43."+yy+"*.nc|head -n 5|tail -n 4")
+	fils=new(40,"string")
+	do	yy=2003,2012
+		fils((yy-2003)*4:(yy-2003)*4+3)=systemfunc ("ls /dadm1/obs/TRMM/3B43_V7/mon/3B43."+yy+"*.nc |head -n 5|tail -n 4")
+		print(fils)
+	end do
 	print(fils)
 	in=addfiles(fils,"r")
 	ListSetType (in,"join")
@@ -51,7 +54,7 @@ do yy=1998,2006
 ; create default plot
 ;************************************************
   if (plottype .eq. "map") then
-    wks = gsn_open_wks("png","fig/"+varname+"_ctrl_"+plottype)  ; open a wks
+    wks = gsn_open_wks("png","/home/L.r02229011/fig/"+varname+"_ctrl_"+plottype)  ; open a wks
     res	= True               ; plot mods desired
     res@cnFillOn	= True               ; turn on color fill
     res@cnLinesOn	= False              ; turn off contour lines
@@ -67,35 +70,35 @@ do yy=1998,2006
 	latend=29
 	lonstart=41
 	lonend=46
-    res@mpMinLatF       = latstart
-    res@mpMaxLatF       = latend
-    res@mpMinLonF       = lonstart
-    res@mpMaxLonF       = lonend
+;    res@mpMinLatF       = latstart
+;    res@mpMaxLatF       = latend
+;    res@mpMinLonF       = lonstart
+;    res@mpMaxLonF       = lonend
     res@cnFillMode           = "RasterFill"
 
 ;***************
-;	res@mpProjection="LambertConformal"
-;	res@mpLambertParallel1F = 30.0         ; two parallels
-;	res@mpLambertParallel2F = 60.0
-;	res@mpLambertMeridianF  = 40.0        ; central meridian
-;	res@mpLimitMode         = "Corners"
-;	res@mpLeftCornerLatF           =   14.6026     ; map area
-;	res@mpLeftCornerLonF           = 32.0755       ; and
-;	res@mpRightCornerLatF           = 36.5432       ; latitudes
-;	res@mpRightCornerLonF           = 60.1822        ; longitudes
-;	res@mpDataBaseVersion="MediumRes"
-;	res@mpGridAndLimbOn=True
-;	res@mpGridLineThicknessF        = 0.5
-;	res@mpGridSpacingF              = 5
-;	res@mpLimbLineColor             = "Gray"
-;	res@mpLimbLineThicknessF        = 0.5
-;	res@mpNationalLineColor         = "Gray"
-;	res@mpNationalLineThicknessF    = 0.5
-;	res@mpPerimLineColor            = "Gray"
-;	res@mpPerimOn                   = True
-;	res@mpUSStateLineColor          = "Gray"
-;	res@mpUSStateLineThicknessF     = 0.5
-;	res@pmTickMarkDisplayMode       = "Always"
+	res@mpProjection="LambertConformal"
+	res@mpLambertParallel1F = 30.0         ; two parallels
+	res@mpLambertParallel2F = 60.0
+	res@mpLambertMeridianF  = 40.0        ; central meridian
+	res@mpLimitMode         = "Corners"
+	res@mpLeftCornerLatF           =   14.6026     ; map area
+	res@mpLeftCornerLonF           = 32.0755       ; and
+	res@mpRightCornerLatF           = 36.5432       ; latitudes
+	res@mpRightCornerLonF           = 60.1822        ; longitudes
+	res@mpDataBaseVersion="MediumRes"
+	res@mpGridAndLimbOn=True
+	res@mpGridLineThicknessF        = 0.5
+	res@mpGridSpacingF              = 5
+	res@mpLimbLineColor             = "Gray"
+	res@mpLimbLineThicknessF        = 0.5
+	res@mpNationalLineColor         = "Gray"
+	res@mpNationalLineThicknessF    = 0.5
+	res@mpPerimLineColor            = "Gray"
+	res@mpPerimOn                   = True
+	res@mpUSStateLineColor          = "Gray"
+	res@mpUSStateLineThicknessF     = 0.5
+	res@pmTickMarkDisplayMode       = "Always"
 ;**********************
 res@trGridType="TriangularMesh"
 
@@ -156,8 +159,8 @@ res@trGridType="TriangularMesh"
 ;    do while (month_plot .le. 11)
 ;	wksMonth= gsn_open_wks("png","fig/"+varname+"_"+month_abbr(month_plot))
 	;symMinMaxPlt(VarClima(month_plot,:,:)*plotscale,20,False,res)
-;	plotMonth=gsn_csm_contour_map(wksMonth,VarClima(month_plot,:,:),res)
-	wksMonth=gsn_open_wks("png","fig/TRMM_FebtoMay"+yy+"_"+varname+"_zoom")
+;	PLotMonth=gsn_csm_contour_map(wksMonth,VarClima(month_plot,:,:),res)
+	wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/TRMM_FebtoMay_"+varname+"")
 	plotMonth=gsn_csm_contour_map(wksMonth,Var(0,:,:),res)
     pmres = True
     pmres@gsMarkerColor = "Black"
@@ -166,17 +169,17 @@ res@trGridType="TriangularMesh"
     plotstn=gsn_add_polymarker(wksMonth,plotMonth,43.97,26.33,pmres)
 	;****************************
 	; for plotting the block
-;	location=latstart+"-"+latend+"N "+lonstart+"-"+lonend+"E "
-;	ypts=(/latstart,latstart,latend,latend,latstart/)
-;	xpts=(/lonstart,lonend,lonend,lonstart,lonstart/)
-;	resp                  = True                      ; polyline mods desired
-;	resp@gsLineColor      = "red"                     ; color of lines
-;	resp@gsLineThicknessF = 4.0                       ; thickness of lines
-;	;****************
-;	  dum = new(4,graphic)  
-;	  do i = 0 , 3
-;		dum(i)=gsn_add_polyline(wksMonth,plotMonth,xpts(i:i+1),ypts(i:i+1),resp)      
-;	  end do 
+	location=latstart+"-"+latend+"N "+lonstart+"-"+lonend+"E "
+	ypts=(/latstart,latstart,latend,latend,latstart/)
+	xpts=(/lonstart,lonend,lonend,lonstart,lonstart/)
+	resp                  = True                      ; polyline mods desired
+	resp@gsLineColor      = "red"                     ; color of lines
+	resp@gsLineThicknessF = 4.0                       ; thickness of lines
+	;****************
+	  dum = new(4,graphic)  
+	  do i = 0 , 3
+		dum(i)=gsn_add_polyline(wksMonth,plotMonth,xpts(i:i+1),ypts(i:i+1),resp)      
+	  end do 
 	;********************************
     draw(plotMonth)
     frame(wksMonth)
@@ -184,6 +187,5 @@ res@trGridType="TriangularMesh"
 ;    month_plot=month_plot+1
 ;    end do
   end if
-end do
   print("file= "+varname+"_"+plottype)
 end

@@ -8,43 +8,21 @@ begin
 ;************************************************
 ; create pointer to file and read in data
 ;************************************************
-  if(.not.isvar("plottype")) then
-    plottype="map"
-  end if
+	lambert=1
+	robinson=0
   month_abbr = (/"1_Jan","2_Feb","3_Mar","4_Apr","5_May","6_Jun","7_Jul","8_Aug","9_Sep","10_Oct","11_Nov","12_Dec"/)
-;    varname="CMG_0_05_Deg_Monthly_EVI"
-    varname="CMG_0_05_Deg_Monthly_NDVI"
-;    varname="LST_Day_CMG"
-    autolevsCli=0
-if (varname.eq."CMG_0_05_Deg_Monthly_NDVI".or.varname.eq."CMG_0_05_Deg_Monthly_EVI")then
-	fils=new(40,"string")
-	do	yy=2003,2012
-		fils((yy-2003)*4:(yy-2003)*4+3)=systemfunc ("ls /work4/L.r02229011/MODIS/MYD13C2.005/*A"+yy+"*.hdf |head -n 5|tail -n 4")
-		print(fils)
-	end do
-	in=addfiles(fils,"r")
-	ListSetType (in,"join")
-	Var= dim_avg_n_Wrap((in[:]->$varname$),0)*0.0001
-;	Var= (in[:]->$varname$)*0.0001
-	printVarSummary(Var)
-    minLevelCli=0
-    maxLevelCli=0.4
-end if
-if (varname.eq."LST_Day_CMG")then
-	fils=new(40,"string")
-	do	yy=2003,2012
-		fils((yy-2003)*4:(yy-2003)*4+3)=systemfunc ("ls /work4/L.r02229011/MODIS/MYD11C3.006/*A"+yy+"*.hdf |head -n 5|tail -n 4")
-		print(fils)
-	end do
-	in=addfiles(fils,"r")
-	ListSetType (in,"join")
-	Vartemp=in[:]->$varname$*0.02
-	Vartemp(:,:,:)=Vartemp(:,:,:)-273.15
-	Var=dim_avg_n_Wrap(Vartemp,0)
-	Var@units="degC"
-    minLevelCli=34
-    maxLevelCli=42
-end if
+    varname="avhrr_TS"
+    autolevsCli=1
+	in=addfiles("/work4/L.r02229011/avhrr_TS.nc","r")
+	ListSetType (in,"cat")
+	Vartemp=in[:]->$varname$
+	Vartemp1=dim_avg_n_Wrap(Vartemp(14:23,:,:,:),0)
+	delete(Vartemp) ; Vartemp1(month,lat,lon)
+	Var=dim_avg_n_Wrap(Vartemp1(1:4,:,:),0)
+	delete(Vartemp1)
+;	Var=in[:]->$varname$(23,6,:,:)
+;    minLevelCli=34
+;    maxLevelCli=42
 ;-------------mask
 ;  filsmask=systemfunc("ls /work3/mlo/cesm1/archive/IRR_B_2000_CAM5/lnd/hist/IRR_B_2000_CAM5.clm2.h0.0101-02.nc")
 ;;  filsmask=systemfunc("ls /home/L.r02229011/irr/mask_2x2_IndusGanges.nc")
@@ -53,22 +31,21 @@ end if
 ;  maskname="landmask"
 ;  Var=mask(Var,conform(Var,inmask[0]->$maskname$,(/1,2/)),1);+in[:]->SWCF(:,:,:)
 ;-------------------
-	lat = fspan(90.,-90.,3600)
-	lon = fspan(-180.,180.,7200)
-	lat@units="degrees_north"
-	lon@units="degrees_east"
-	Var!0="lat"
-	Var!1="lon"
-	Var&lat=lat
-	Var&lon=lon
-	Var@_FillValue=999
+;	lat = fspan(90.,-90.,3600)
+;	lon = fspan(-180.,180.,7200)
+;	lat@units="degrees_north"
+;	lon@units="degrees_east"
+;	Var!0="lat"
+;	Var!1="lon"
+;	Var&lat=lat
+;	Var&lon=lon
+;	Var@_FillValue=999
 	printVarSummary(Var)
-	clat = cos(lat*4.0*atan(1.0)/180.0)  ; lat weight
+;	clat = cos(lat*4.0*atan(1.0)/180.0)  ; lat weight
 ;************************************************
 ; create default plot
 ;************************************************
-  if (plottype .eq. "map") then
-    wks = gsn_open_wks("png","/home/L.r02229011/fig/"+varname+"_ctrl_"+plottype)  ; open a wks
+    wks = gsn_open_wks("png","/home/L.r02229011/fig/"+varname)  ; open a wks
     res	= True               ; plot mods desired
     res@cnFillOn	= True               ; turn on color fill
     res@cnLinesOn	= False              ; turn off contour lines
@@ -91,6 +68,15 @@ end if
 ;    res@mpMaxLonF       = lonend
 
 ;***************
+if robinson.eq.1 then
+	res@mpPerimOn            = False
+	res@mpGridAndLimbOn   = True
+	res@mpGridLatSpacingF = 30.
+	res@mpGridLonSpacingF = 30.
+	res@mpProjection = "Robinson"
+	res@mpCenterLonF=150
+end if
+if lambert.eq.1 then
 	res@mpProjection="LambertConformal"
 	res@mpLambertParallel1F = 30.0         ; two parallels
 	res@mpLambertParallel2F = 60.0
@@ -113,6 +99,7 @@ end if
 	res@mpUSStateLineColor          = "Gray"
 	res@mpUSStateLineThicknessF     = 0.5
 	res@pmTickMarkDisplayMode       = "Always"
+end if
 ;**********************
 res@trGridType="TriangularMesh"
 
@@ -177,7 +164,7 @@ res@trGridType="TriangularMesh"
 ;	wksMonth= gsn_open_wks("png","fig/"+varname+"_"+month_abbr(month_plot))
 	;symMinMaxPlt(VarClima(month_plot,:,:)*plotscale,20,False,res)
 ;	plotMonth=gsn_csm_contour_map(wksMonth,VarClima(month_plot,:,:),res)
-	wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/MODIS_FebtoMay_"+varname+"")
+	wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/"+varname+"")
 	plotMonth=gsn_csm_contour_map(wksMonth,Var,res)
     pmres = True
     pmres@gsMarkerColor = "Black"
@@ -203,6 +190,5 @@ res@trGridType="TriangularMesh"
 ;    print(month_abbr(month_plot)+" ok")
 ;    month_plot=month_plot+1
 ;    end do
-  end if
-  print("file= "+varname+"_"+plottype)
+  print("file= "+varname)
 end
