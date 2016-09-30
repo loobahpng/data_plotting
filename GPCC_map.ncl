@@ -14,7 +14,6 @@ begin
   end if
 
 
-   varname="p"
     autolevs=0
     maxLevel=0.2
     minLevel=-0.2
@@ -22,13 +21,26 @@ begin
     minLevelTrend=-2.
     maxLevelBase=40.
     minLevelBase=0.
-  print ("varname= "+varname)
+	month_abbr = (/"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"/)
 
-  month_abbr = (/"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"/)
-  fils=systemfunc ("ls /work4/L.r02229011/GPCC/Full_Data_Reanalysis_V7/full_data_v7_05.nc")
-  in=addfiles(fils,"r")
-  ListSetType (in,"cat")
+	fils=systemfunc ("ls /work4/L.r02229011/GPCC/Full_Data_Reanalysis_V7/full_data_v7_05.nc")
+	varname="p"
+
+	fils=systemfunc ("ls /dadm1/obs/GPCP/mon/GPCP_V2.2_197901-201307.nc")
+	varname="precip"
+
+	print ("varname= "+varname)
+	in=addfiles(fils,"r")
+	ListSetType (in,"cat")
 ;===============
+	lat = in[0]->lat
+	lon = in[0]->lon
+	print("*******************")
+	print(ind(lat.eq.lat({26.33})))
+	print(ind(lon.eq.lon({43.97})))
+	print("grid cell at: "+lat({26.33})+", "+lon({43.97}))
+	print("*******************")
+;==================
 	res	= True               ; plot mods desired
 	res@cnFillOn	= True               ; turn on color fill
 	res@cnLinesOn	= False              ; turn off contour lines
@@ -80,7 +92,7 @@ begin
 		Month=in[:]->$varname$((1991-1901)*12+(5-1),:,:)
 		Month(:,:)=(in[:]->$varname$((year-1901)*12+(2-1),:,:)+in[:]->$varname$((year-1901)*12+(3-1),:,:)+in[:]->$varname$((year-1901)*12+(4-1),:,:)+in[:]->$varname$((year-1901)*12+(5-1),:,:))/4
 		Month&lat@units="degrees_north"
-		wks=gsn_open_wks("png","fig/GPCC_"+year+"FMAM")
+		wks=gsn_open_wks("png","/home/L.r02229011/fig/GPCC_"+year+"FMAM")
 		plot=gsn_csm_contour_map(wks,Month,res)
 	;****************************
 	; for plotting the block
@@ -110,16 +122,21 @@ begin
 	;********************************
 	end do
 ;===============
-  startyear=1970
-  endyear=2010
-  Var= in[:]->$varname$((startyear-1901)*12:(endyear-1901)*12+11,:,:)
-  startyear2=1994
-  endyear2=2010
-  VarExp= in[:]->$varname$((startyear2-1901)*12:(endyear2-1901)*12+11,:,:)
-  
-  lat = in[0]->lat
-  lon = in[0]->lon
-  clat = cos(lat*4.0*atan(1.0)/180.0)  ; lat weight
+	startyear=1970
+	endyear=2010
+	Var= in[:]->$varname$((startyear-1901)*12:(endyear-1901)*12+11,:,:)
+	startyear2=1994
+	endyear2=2010
+	VarExp= in[:]->$varname$((startyear2-1901)*12:(endyear2-1901)*12+11,:,:)
+
+	lat = in[0]->lat
+	lon = in[0]->lon
+	print("*******************")
+	print(ind(lat.eq.lat({26.33})))
+	print(ind(lon.eq.lon({43.97})))
+	print("*******************")
+
+	clat = cos(lat*4.0*atan(1.0)/180.0)  ; lat weight
 
 ;-------------mask
 if (maskwhat.ne."no")then
@@ -258,7 +275,7 @@ res@cnLevelSpacingF = (maxLevelBase-0.)/20.
 res@cnFillPalette = "precip3_16lev"
 res@gsnLeftString="GPCC FMAM precipitation 1970 to 2010"
 diff(:,:)=(/dim_avg_n_Wrap(map((/1,2,3,4/),:,:),0)/)
-wksMonth=gsn_open_wks("png","fig/GPCC"+"_FMAM_period_1")
+wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_FMAM_period_1")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
 ;****************
 dum = new(4,graphic)  
@@ -276,7 +293,7 @@ res@cnLevelSpacingF = (maxLevelBase-0.)/20.
 res@cnFillPalette = "precip3_16lev"
 res@gsnLeftString="GPCC FMAM precipitation 1994 to 2010"
 diff(:,:)=(/dim_avg_n_Wrap(mapExp((/1,2,3,4/),:,:),0)/)
-wksMonth=gsn_open_wks("png","fig/GPCC"+"_FMAM_period_2")
+wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_FMAM_period_2")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
 ;****************
 dum = new(4,graphic)  
@@ -294,7 +311,7 @@ res@cnLevelSpacingF = (20.+20.)/20.
 res@cnFillPalette = "precip4_diff_19lev"
 res@gsnLeftString="GPCC FMAM precipitation Differences"
 diff(:,:)=(/dim_avg_n_Wrap(mapExp((/1,2,3,4/),:,:),0)-dim_avg_n_Wrap(map((/1,2,3,4/),:,:),0)/)
-wksMonth=gsn_open_wks("png","fig/GPCC"+"_FMAM_diff")
+wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_FMAM_diff")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
 ;****************
 dum = new(4,graphic)  
@@ -311,7 +328,7 @@ res@cnLevelSpacingF = (1.+1.)/20.
 res@cnFillPalette = "precip4_diff_19lev"
 temp=where(dim_avg_n_Wrap(map((/1,2,3,4/),:,:),0).gt.0,dim_avg_n_Wrap(map((/1,2,3,4/),:,:),0),map@_FillValue)
 diff(:,:)=(dim_avg_n_Wrap(mapExp((/1,2,3,4/),:,:),0)-dim_avg_n_Wrap(map((/1,2,3,4/),:,:),0))/temp
-wksMonth=gsn_open_wks("png","fig/GPCC"+"_FMAM_diff_ratio")
+wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_FMAM_diff_ratio")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
 ;****************
 dum = new(4,graphic)  
@@ -328,7 +345,7 @@ res@cnMinLevelValF  = 0.
 res@cnLevelSpacingF = (maxLevelBase-0.)/20.
 res@cnFillPalette = "precip3_16lev"
 diff(:,:)=(/dim_avg_n_Wrap(map((/0,1,2,3,10,11/),:,:),0)/)
-wksMonth=gsn_open_wks("png","fig/GPCC"+"_wet_period_1")
+wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_wet_period_1")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
 
 res@cnLevelSelectionMode ="ManualLevels"
@@ -337,7 +354,7 @@ res@cnMinLevelValF  = 0.
 res@cnLevelSpacingF = (maxLevelBase-0.)/20.
 res@cnFillPalette = "precip3_16lev"
 diff(:,:)=(/dim_avg_n_Wrap(mapExp((/0,1,2,3,10,11/),:,:),0)/)
-wksMonth=gsn_open_wks("png","fig/GPCC"+"_wet_period_2")
+wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_wet_period_2")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
 
 res@cnLevelSelectionMode ="ManualLevels"
@@ -346,7 +363,7 @@ res@cnMinLevelValF  = -20.
 res@cnLevelSpacingF = (20.+20.)/20.
 res@cnFillPalette = "precip4_diff_19lev"
 diff(:,:)=(/dim_avg_n_Wrap(mapExp((/0,1,2,3,10,11/),:,:),0)-dim_avg_n_Wrap(map((/0,1,2,3,10,11/),:,:),0)/)
-wksMonth=gsn_open_wks("png","fig/GPCC"+"_wet_diff")
+wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_wet_diff")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
 
 res@cnLevelSelectionMode ="ManualLevels"
@@ -356,7 +373,7 @@ res@cnLevelSpacingF = (1.+1.)/20.
 res@cnFillPalette = "precip4_diff_19lev"
 temp=where(dim_avg_n_Wrap(map((/0,1,2,3,10,11/),:,:),0).gt.0,dim_avg_n_Wrap(map((/0,1,2,3,10,11/),:,:),0),map@_FillValue)
 diff(:,:)=(dim_avg_n_Wrap(mapExp((/0,1,2,3,10,11/),:,:),0)-dim_avg_n_Wrap(map((/0,1,2,3,10,11/),:,:),0))/temp
-wksMonth=gsn_open_wks("png","fig/GPCC"+"_wet_diff_ratio")
+wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_wet_diff_ratio")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
 
 res@cnLevelSelectionMode ="ManualLevels"
@@ -365,7 +382,7 @@ res@cnMinLevelValF  = 0.
 res@cnLevelSpacingF = (maxLevelBase-0.)/20.
 res@cnFillPalette = "precip3_16lev"
 diff(:,:)=(/dim_avg_n_Wrap(map((/5,6,7,8/),:,:),0)/)
-wksMonth=gsn_open_wks("png","fig/GPCC"+"_dry_period_1")
+wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_dry_period_1")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
 
 res@cnLevelSelectionMode ="ManualLevels"
@@ -374,7 +391,7 @@ res@cnMinLevelValF  = 0.
 res@cnLevelSpacingF = (maxLevelBase-0.)/20.
 res@cnFillPalette = "precip3_16lev"
 diff(:,:)=(/dim_avg_n_Wrap(mapExp((/5,6,7,8/),:,:),0)/)
-wksMonth=gsn_open_wks("png","fig/GPCC"+"_dry_period_2")
+wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_dry_period_2")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
 
 res@cnLevelSelectionMode ="ManualLevels"
@@ -383,7 +400,7 @@ res@cnMinLevelValF  = -10.
 res@cnLevelSpacingF = (10.+10.)/20.
 res@cnFillPalette = "precip4_diff_19lev"
 diff(:,:)=(/dim_avg_n_Wrap(mapExp((/5,6,7,8/),:,:),0)-dim_avg_n_Wrap(map((/5,6,7,8/),:,:),0)/)
-wksMonth=gsn_open_wks("png","fig/GPCC"+"_dry_diff")
+wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_dry_diff")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
 
 res@cnMaxLevelValF  = 1.
@@ -392,7 +409,7 @@ res@cnLevelSpacingF = (1.+1.)/20.
 res@cnFillPalette = "precip4_diff_19lev"
 temp=where(dim_avg_n_Wrap(map((/5,6,7,8/),:,:),0).gt.0,dim_avg_n_Wrap(map((/5,6,7,8/),:,:),0),map@_FillValue)
 diff(:,:)=(dim_avg_n_Wrap(mapExp((/5,6,7,8/),:,:),0)-dim_avg_n_Wrap(map((/5,6,7,8/),:,:),0))/temp
-wksMonth=gsn_open_wks("png","fig/GPCC"+"_dry_diff_ratio")
+wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_dry_diff_ratio")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
 
 do while (month_plot .le. 12)
@@ -404,7 +421,7 @@ do while (month_plot .le. 12)
     res@gsnFrame=False
     res@gsnDraw=False
     diff(:,:)=(/map(month_plot-1,:,:)/)
-    wksMonth=gsn_open_wks("png","fig/GPCC"+"_"+month_plot+"period_1")
+    wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_"+month_plot+"period_1")
     plot=gsn_csm_contour_map(wksMonth,diff,res)
         ;****************
           dum = new(4,graphic)  
@@ -416,7 +433,7 @@ do while (month_plot .le. 12)
         ;********************************
 
     diff(:,:)=(/mapExp(month_plot-1,:,:)/)
-    wksMonth=gsn_open_wks("png","fig/GPCC"+"_"+month_plot+"period_2")
+    wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_"+month_plot+"period_2")
     plot=gsn_csm_contour_map(wksMonth,diff,res)
         ;****************
           dum = new(4,graphic)  
@@ -433,7 +450,7 @@ do while (month_plot .le. 12)
     res@cnMinLevelValF  = -25.
     res@cnLevelSpacingF = (25.+25.)/20.
     res@cnFillPalette = "precip4_diff_19lev"
-    wksMonth=gsn_open_wks("png","fig/GPCC"+"_"+month_plot+"period_diff")
+    wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_"+month_plot+"period_diff")
     plot=gsn_csm_contour_map(wksMonth,diff,res)
         ;****************
           dum = new(4,graphic)  
@@ -451,7 +468,7 @@ do while (month_plot .le. 12)
     res@cnMinLevelValF  = -2.
     res@cnLevelSpacingF = (2.+2.)/20.
     res@cnFillPalette = "precip4_diff_19lev"
-    wksMonth=gsn_open_wks("png","fig/GPCC"+"_"+month_plot+"period_diff_ratio")
+    wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_"+month_plot+"period_diff_ratio")
     plot=gsn_csm_contour_map(wksMonth,diff,res)
         ;****************
           dum = new(4,graphic)  
