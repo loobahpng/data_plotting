@@ -26,8 +26,8 @@ begin
 	fils=systemfunc ("ls /work4/L.r02229011/GPCC/Full_Data_Reanalysis_V7/full_data_v7_05.nc")
 	varname="p"
 
-	fils=systemfunc ("ls /dadm1/obs/GPCP/mon/GPCP_V2.2_197901-201307.nc")
-	varname="precip"
+;	fils=systemfunc ("ls /dadm1/obs/GPCP/mon/GPCP_V2.2_197901-201307.nc")
+;	varname="precip"
 
 	print ("varname= "+varname)
 	in=addfiles(fils,"r")
@@ -122,11 +122,11 @@ begin
 	;********************************
 	end do
 ;===============
-	startyear=1970
-	endyear=2010
+	startyear=1966
+	endyear=1977
+	startyear2=1980
+	endyear2=1995
 	Var= in[:]->$varname$((startyear-1901)*12:(endyear-1901)*12+11,:,:)
-	startyear2=1994
-	endyear2=2010
 	VarExp= in[:]->$varname$((startyear2-1901)*12:(endyear2-1901)*12+11,:,:)
 
 	lat = in[0]->lat
@@ -273,7 +273,6 @@ res@cnMaxLevelValF  = maxLevelBase
 res@cnMinLevelValF  = 0.
 res@cnLevelSpacingF = (maxLevelBase-0.)/20.
 res@cnFillPalette = "precip3_16lev"
-res@gsnLeftString="GPCC FMAM precipitation 1970 to 2010"
 diff(:,:)=(/dim_avg_n_Wrap(map((/1,2,3,4/),:,:),0)/)
 wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_FMAM_period_1")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
@@ -291,7 +290,6 @@ res@cnMaxLevelValF  =maxLevelBase
 res@cnMinLevelValF  = 0.
 res@cnLevelSpacingF = (maxLevelBase-0.)/20.
 res@cnFillPalette = "precip3_16lev"
-res@gsnLeftString="GPCC FMAM precipitation 1994 to 2010"
 diff(:,:)=(/dim_avg_n_Wrap(mapExp((/1,2,3,4/),:,:),0)/)
 wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_FMAM_period_2")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
@@ -304,6 +302,25 @@ draw(plot)
 frame(wksMonth)
 ;********************************
 
+    ressig=True
+    ressig@gsnLeftString=""
+    ressig@gsnRightString=""
+    ressig@gsnDraw=False
+    ressig@gsnFrame=False
+    ressig@cnInfoLabelOn       = False       ; turn off info label
+    ressig@cnLinesOn           = False       ; do not draw contour lines
+    ressig@cnLineLabelsOn      = False       ; do not draw contour labels
+    ressig@cnLevelSelectionMode ="ManualLevels"
+    ressig@cnMaxLevelValF  = 1.
+    ressig@cnMinLevelValF  = 0.
+    ressig@cnLevelSpacingF = (1.-0.)/20.
+    ressig@cnFillScaleF=0.7
+    ressig@cnFillDotSizeF=0.002
+    resdot = True
+    resdot@gsnShadeFillType = "pattern"        ; color is the default
+    resdot@gsnShadeMid = 17                  ; use color index 14
+
+
 res@cnLevelSelectionMode ="ManualLevels"
 res@cnMaxLevelValF  = 20.
 res@cnMinLevelValF  = -20.
@@ -313,11 +330,21 @@ res@gsnLeftString="GPCC FMAM precipitation Differences"
 diff(:,:)=(/dim_avg_n_Wrap(mapExp((/1,2,3,4/),:,:),0)-dim_avg_n_Wrap(map((/1,2,3,4/),:,:),0)/)
 wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_FMAM_diff")
 plot=gsn_csm_contour_map(wksMonth,diff,res)
+	period1var=dim_variance_n_Wrap(dim_avg_n_Wrap(t(:,(/1,2,3,4/),:,:),1),0)
+	period2var=dim_variance_n_Wrap(dim_avg_n_Wrap(tExp(:,(/1,2,3,4/),:,:),1),0)
+	sX=endyear-startyear+1
+	sY=endyear2-startyear2+1
+	prob=diff;dimension
+	prob(:,:) = ttest(dim_avg_n_Wrap(map((/1,2,3,4/),:,:),0),period1var,sX,dim_avg_n_Wrap(mapExp((/1,2,3,4/),:,:),0),period2var,sY, True, False)
 ;****************
 dum = new(4,graphic)  
 do i = 0 , 3
 dum(i)=gsn_add_polyline(wksMonth,plot,xpts(i:i+1),ypts(i:i+1),resp)      
 end do 
+    plotsig=gsn_csm_contour(wksMonth,prob,ressig)
+	siglvl=0.05
+    plotsig=gsn_contour_shade(plotsig,0.,siglvl,resdot)
+    overlay(plot,plotsig)
 draw(plot)
 frame(wksMonth)
 ;********************************
@@ -420,6 +447,7 @@ do while (month_plot .le. 12)
     res@cnFillPalette = "precip3_16lev"
     res@gsnFrame=False
     res@gsnDraw=False
+	res@gsnLeftString="GPCC precipitation "+month_abbr(month_plot-1)
     diff(:,:)=(/map(month_plot-1,:,:)/)
     wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_"+month_plot+"period_1")
     plot=gsn_csm_contour_map(wksMonth,diff,res)
@@ -445,6 +473,14 @@ do while (month_plot .le. 12)
         ;********************************
 
     diff(:,:)=mapExp(month_plot-1,:,:)-map(month_plot-1,:,:)
+	period1var=dim_variance_n_Wrap(t(:,month_plot-1,:,:),0)
+	period2var=dim_variance_n_Wrap(tExp(:,month_plot-1,:,:),0)
+	printVarSummary(period1var)
+	printVarSummary(map(month_plot-1,:,:))
+	sX=endyear-startyear+1
+	sY=endyear2-startyear2+1
+	prob=diff;dimension
+	prob(:,:) = ttest(map(month_plot-1,:,:),period1var,sX,mapExp(month_plot-1,:,:),period2var,sY, True, False)
     res@cnLevelSelectionMode ="ManualLevels"
     res@cnMaxLevelValF  = 25.
     res@cnMinLevelValF  = -25.
@@ -452,6 +488,13 @@ do while (month_plot .le. 12)
     res@cnFillPalette = "precip4_diff_19lev"
     wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/GPCC"+"_"+month_plot+"period_diff")
     plot=gsn_csm_contour_map(wksMonth,diff,res)
+
+
+    plotsig=gsn_csm_contour(wksMonth,prob,ressig)
+	siglvl=0.05
+    plotsig=gsn_contour_shade(plotsig,0.,siglvl,resdot)
+    overlay(plot,plotsig)
+
         ;****************
           dum = new(4,graphic)  
           do i = 0 , 3

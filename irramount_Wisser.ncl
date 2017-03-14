@@ -179,6 +179,11 @@ xpts=(/lonstart,lonend,lonend,lonstart,lonstart/)
           draw(plot)
           frame(wks)
         ;********************************
+
+	delete(regional_avg)
+	Var=where(Var.gt.1.,Var,Var@_FillValue)
+	regional_avg=wgt_areaave_Wrap(Var(:,{latstart:latend},{lonstart:lonend}),clat({latstart:latend}),1.0,0)
+	print(regional_avg)
     delete(Var)
 
 end

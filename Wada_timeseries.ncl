@@ -95,13 +95,66 @@ lonend=47
     plot  = gsn_csm_xy (wks,ispan(1960,2010,1),regional_avg  ,res) ; create plot
 
 	month_abbr = (/"1_Jan","2_Feb","3_Mar","4_Apr","5_May","6_Jun","7_Jul","8_Aug","9_Sep","10_Oct","11_Nov","12_Dec"/)
+	delete(regional_avg)
+	Var=where(Var.gt.1.,Var,Var@_FillValue)
+	regional_avg=wgt_areaave_Wrap(Var(:,{latstart:latend},{lonstart:lonend}),clat({latstart:latend}),1.0,0)
+	print(regional_avg)
+	; print timeseries out
+
+	delete(regional_avg)
+    res                = True               ; plot mods desired
+    res@gsnDraw   = False                             ; don't draw yet
+    res@gsnFrame  = False                             ; don't advance yet
+    res@cnFillOn	= True               ; turn on color fill
+    res@cnLinesOn	= False              ; turn off contour lines
+    res@gsnMaximize	= True
+    res@mpOutlineBoundarySets       = "National"
+    res@mpDataSetName = "Earth..4"
+    res@mpCountyLineThicknessF=2.0
+    res@mpGeophysicalLineThicknessF =5.0
+    res@lbLabelFontHeightF=.02
+    res@cnLevelSelectionMode ="ManualLevels"
+    res@cnMaxLevelValF  = 140
+    res@cnMinLevelValF  = 1 
+    res@cnLevelSpacingF = 7
+    res@cnFillPalette = "precip3_16lev"
+;==========Lambert
+	res@mpProjection="LambertConformal"
+	res@mpLambertParallel1F = 30.0         ; two parallels
+	res@mpLambertParallel2F = 60.0
+	res@mpLambertMeridianF  = 40.0        ; central meridian
+	res@mpLimitMode         = "Corners"
+	res@mpLeftCornerLatF           =   14.6026     ; map area
+	res@mpLeftCornerLonF           = 32.0755       ; and
+	res@mpRightCornerLatF           = 36.5432       ; latitudes
+	res@mpRightCornerLonF           = 60.1822        ; longitudes
+
+	res@mpDataBaseVersion="MediumRes"
+	res@mpGridAndLimbOn=True
+	res@mpGridLineThicknessF        = 0.5
+	res@mpGridSpacingF              = 5
+	res@mpLimbLineColor             = "Gray"
+	res@mpLimbLineThicknessF        = 0.5
+	res@mpNationalLineColor         = "Gray"
+	res@mpNationalLineThicknessF    = 0.5
+	res@mpPerimLineColor            = "Gray"
+	res@mpPerimOn                   = True
+	res@mpUSStateLineColor          = "Gray"
+	res@mpUSStateLineThicknessF     = 0.5
+	res@pmTickMarkDisplayMode       = "Always"
+	res@cnFillMode="RasterFill"
+;==========
 	do mm=0,11
-		month=t(:,mm,:,:)
-		regional_avg=wgt_areaave_Wrap(month(:,{latstart:latend},{lonstart:lonend}),clat({latstart:latend}),1.0,0)
-		res@tiMainString="irri amount "+location+"_"+month_abbr(mm)
-		wks = gsn_open_wks("png","/home/L.r02229011/fig/irr_"+month_abbr(mm)+latstart+latend+lonstart+lonend)  ; open a wks
-		plot  = gsn_csm_xy (wks,ispan(1960,2010,1),regional_avg  ,res) ; create plot
-		print(month_abbr(mm)+"_"+dim_avg_n_Wrap(regional_avg(30::),0))
+		month=dim_avg_n_Wrap(t(40:50,mm,:,:),0)
+		month=where(month.gt.1.,month,month@_FillValue)
+		regional_avg=wgt_areaave_Wrap(month({latstart:latend},{lonstart:lonend}),clat({latstart:latend}),1.0,0)
+;		print(month_abbr(mm)+": "+regional_avg)
+;		print("max: "+max(month({latstart:latend},{lonstart:lonend})))
+		res@tiMainString="irri amount "+location+month_abbr(mm)
+		wks = gsn_open_wks("png","/home/L.r02229011/fig/irr_fillvalue"+month_abbr(mm)+latstart+latend+lonstart+lonend)  ; open a wks
+		plot=gsn_csm_contour_map(wks,month,res)
+		draw(plot)
+		frame(wks)
 	end do
 
     ;gavg=wgt_areaave_Wrap(Var(:,{35:40},{70:80}),clat({35:40}),1.0,0)   ; global avg

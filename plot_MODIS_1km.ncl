@@ -13,26 +13,33 @@ lambert=0
 regional=1
 month_abbr = (/"_1_Jan_","_2_Feb_","_3_Mar_","_4_Apr_","_5_May_","_6_Jun_","_7_Jul_","_8_Aug_","_9_Sep_","_10_Oct_","_11_Nov_","_12_Dec_"/)
 
-varname="ET_1km"
+varname="1_km_16_days_NDVI"
+varname="LST_Day_1km"
 
-	inlatlon=addfile("/work4/L.r02229011/MYD11A2.A2003305.h22v06.006.2015208213826.hdf.hdfeos","r")
-	lat2d=inlatlon->GridLat_MODIS_Grid_8Day_1km_LST
-	lon2d=inlatlon->GridLon_MODIS_Grid_8Day_1km_LST
+	filename="/work4/L.r02229011/MODIS/MYD13A2.A2004073.h21v06.006.2015154152055.hdf"
+	filename="/work4/L.r02229011/MODIS/MYD13A2.A2004073.h22v06.006.2015154152120.hdf"
+	filename="/work4/L.r02229011/MODIS/MYD11A2.A2004073.h22v06.006.2015216213815.hdf"
+	filename="/work4/L.r02229011/MODIS/MYD11A2.A2004073.h21v06.006.2015216213814.hdf"
 
-	fils=systemfunc ("ls /work3/L.r02229011/BESS/realtimedata.snu.ac.kr/BESS_MOD_ET_v1/realtimedata.snu.ac.kr/BESS_MOD_ET_v1/2010/113/*.h22v06.001.h5")
-	print(fils)
-	;	fils=systemfunc("ls /work4/L.r02229011/MODIS/MYD13C2.005/*A"+yy+"*.hdf |head -n 5|tail -n 1")
-	;	print(fils)
-	in=addfiles(fils,"r")
-	ListSetType (in,"join")
-	Var= tofloat(in[:]->$varname$)
-	;Var=where(in[:]->Band1.lt.32000,in[:]->Band1,9.96921e+36)
-	Var@_FillValue=255
-	Var(:,:)=Var(:,:)*0.1*30
+	in=addfile(filename,"r")
+;	Var= (in->$varname$)/10000.
+	Var= (in->$varname$)*0.02-273.15
+	delete(in)
+	in=addfile(filename+".hdfeos","r")
+
+	gridlat="GridLat_MODIS_Grid_16DAY_1km_VI"
+	gridlon="GridLon_MODIS_Grid_16DAY_1km_VI"
+
+	gridlat="GridLat_MODIS_Grid_8Day_1km_LST"
+	gridlon="GridLon_MODIS_Grid_8Day_1km_LST"
+	Var@lat2d=in->$gridlat$
+	Var@lon2d=in->$gridlon$
 
 	autolevsCli=0
-	minLevelCli=0
-	maxLevelCli=50
+	minLevelCli=0.
+	maxLevelCli=0.5
+	minLevelCli=32.
+	maxLevelCli=44.
 ;-------------mask
 ;  filsmask=systemfunc("ls /work3/mlo/cesm1/archive/IRR_B_2000_CAM5/lnd/hist/IRR_B_2000_CAM5.clm2.h0.0101-02.nc")
 ;;  filsmask=systemfunc("ls /home/L.r02229011/irr/mask_2x2_IndusGanges.nc")
@@ -73,10 +80,6 @@ varname="ET_1km"
 	lonstart=41
 	lonend=46
 ;****************
-	latstart=25
-	latend=27
-	lonstart=43
-	lonend=45
 
 ;*****Kansas
 ;	latstart=35
@@ -92,10 +95,15 @@ varname="ET_1km"
 ;	lonend=-110
 ;************
 if regional.eq.1 then
-    res@mpMinLatF       = latstart
-    res@mpMaxLatF       = latend
-    res@mpMinLonF       = lonstart
-    res@mpMaxLonF       = lonend
+  res@mpMinLatF           = min(Var@lat2d)-2      ; choose map limits
+  res@mpMaxLatF           = max(Var@lat2d)+2
+  res@mpMinLonF           = min(Var@lon2d)-2
+  res@mpMaxLonF           = max(Var@lon2d)+2
+
+  res@mpMinLatF           = latstart
+  res@mpMaxLatF           = latend
+  res@mpMinLonF           = lonstart
+  res@mpMaxLonF           = lonend
 end if
 ;***************
 if lambert.eq.1 then
@@ -191,7 +199,7 @@ res@trGridType="TriangularMesh"
 	wksMonth=gsn_open_wks("png","/home/L.r02229011/fig/BESStest_h22v06")
 	print("plotMonth")
 	res@gsnAddCyclic = False
-	plotMonth=gsn_csm_contour(wksMonth,Var,res)
+	plotMonth=gsn_csm_contour_map(wksMonth,Var,res)
 	print("plot ok")
 ;    pmres = True
 ;    pmres@gsMarkerColor = "Black"
@@ -221,14 +229,14 @@ res@trGridType="TriangularMesh"
 ;    month_plot=month_plot+1
 ;    end do
   end if
-	Var1d=ndtooned(Var)
-	lat1d=ndtooned(lat2d)
-	lon1d=ndtooned(lon2d)
+;	Var1d=ndtooned(Var)
+;	lat1d=ndtooned(lat2d)
+;	lon1d=ndtooned(lon2d)
 
-	thre=80
-	print(Var1d(ind(Var1d.gt.thre)))
-	print("lat")
-	print(lat1d(ind(Var1d.gt.thre))+"N "+lon1d(ind(Var1d.gt.thre))+"E")
+;	thre=80
+;	print(Var1d(ind(Var1d.gt.thre)))
+;	print("lat")
+;	print(lat1d(ind(Var1d.gt.thre))+"N "+lon1d(ind(Var1d.gt.thre))+"E")
 ;	print(""+(ind(Var1d.gt.thre)))
 	
 ;	iiiind=30000

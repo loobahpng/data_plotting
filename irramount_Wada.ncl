@@ -41,7 +41,7 @@ dataset="Wada"
 ;    inmask=addfile("mask_0.9x1.25_IndusGanges.nc","r")
 ;    Var=mask(Var,conform(Var,inmask->$maskname$,(/1,2/)),1);+in[:]->SWCF(:,:,:)
 ;------------
-  VarClima=clmMonTLL(Var(492:611,:,:))
+  VarClima=clmMonTLL(Var(240:431,:,:)) ;12*(y-1960)
   ;VarClima(:,:,:)=clmMonTLL(Var(0:11,:,:))
 ;  annual=dim_avg_n_Wrap(VarClima,0)*12.
 ;  annual=annual*inExp[0]->area/1000./1000.
